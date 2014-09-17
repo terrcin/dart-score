@@ -1,4 +1,5 @@
 source 'https://rubygems.org'
+ruby '2.1.2'
 
 gem 'rails', '4.0.0'
 gem 'pg'
@@ -19,6 +20,6 @@ group :doc do
   gem 'sdoc', require: false
 end
 
-group :production do 
+group :production do
   gem 'rails_12factor'
 end
