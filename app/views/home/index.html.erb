@@ -18,6 +18,7 @@
         </div>
       </li>
     </ul>
+    <button class="right-most-buttons" ng-click="playerCtrl.setCurrentPlayer(playerCtrl.getNextPlayer())">Next Player</button>
   </section>
   <section class="dartboard" ng-controller="DartboardController as dartCtrl" ng-click="dartCtrl.dartThrow($event)">
     <button class="right-most-buttons" ng-click="dartCtrl.undo()">Undo</button>

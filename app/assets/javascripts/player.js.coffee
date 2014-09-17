@@ -13,6 +13,9 @@ angular.module("dartboard")
       setCurrentPlayer: (player) ->
         @gameService.setCurrentPlayer(player)
 
+      getNextPlayer: () ->
+        @gameService.getNextPlayer()
+
       currentPlayerName: ->
         if @gameService.hasCurrentPlayer()
           "#{@gameService.currentPlayerName()}'s turn"

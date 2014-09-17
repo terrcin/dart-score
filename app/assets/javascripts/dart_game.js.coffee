@@ -1,5 +1,5 @@
 angular.module("dartboard", [])
-  .service "gameService", 
+  .service "gameService",
 
     class GameService
 
@@ -15,14 +15,21 @@ angular.module("dartboard", [])
       currentPlayer: {}
 
       addPlayer: (name) ->
-        player = { name: name, score: 501, turn: [], shots: [], isActive: "" }
+        player = { name: name, score: 501, turn: [], turns: [], isActive: "" }
         @players.push(player)
         @setCurrentPlayer(player)
 
       setCurrentPlayer: (player) ->
+        @completeTurn()
         @currentPlayer.isActive = ""
         @currentPlayer = player
         @currentPlayer.isActive = "active"
+
+      getNextPlayer: () ->
+        if @players.indexOf(@currentPlayer) < (@players.length-1)
+          @players[@players.indexOf(@currentPlayer)+1]
+        else
+          @players[0]
 
       hasCurrentPlayer: ->
         !_.isEmpty(@currentPlayer)
@@ -34,7 +41,8 @@ angular.module("dartboard", [])
         @currentPlayer.turn || []
 
       dartHit: (target) ->
-        @addShotToPlayerTurn(@calculateDartHit(target)) if @hasCurrentPlayer()
+        if @currentPlayer.turn.length < @numTurns
+          @addShotToPlayerTurn(@calculateDartHit(target)) if @hasCurrentPlayer()
 
       calculateDartHit: (target="miss") ->
         if target in @missIds
@@ -54,12 +62,15 @@ angular.module("dartboard", [])
 
       updateScore: (score) ->
         @currentPlayer.score -= score
-        @currentPlayer.shots.push(score)
         @lastScore = score
 
       addShotToPlayerTurn: (shot) ->
-        @currentPlayer.turn = [] if @currentPlayer.turn.length >= @numTurns
         @currentPlayer.turn.push(shot)
+
+      completeTurn: () ->
+        if @hasCurrentPlayer() && @currentPlayer.turn.length > 0
+          @currentPlayer.turns.push(@currentPlayer.turn.concat([@missValue, @missValue, @missValue]).slice(0,3))
+          @currentPlayer.turn = []
 
       winItMessage: ->
         if @isBust()
@@ -69,7 +80,7 @@ angular.module("dartboard", [])
           @winMessage()
         else if @isScoreInDoubleRange(@currentPlayer.score)
           if @evenScoreRemaining()
-            "Double #{@doubleToWin()} to win" 
+            "Double #{@doubleToWin()} to win"
           else
             "In winning range"
 
@@ -97,15 +108,11 @@ angular.module("dartboard", [])
         @currentPlayer.score / 2
 
       undoLastThrow: (undoTurn=true) ->
-        if @hasCurrentPlayer() && @currentPlayer.shots.length > 0
-          @currentPlayer.score += @currentPlayer.shots.pop()
-          @undoLastTurn() if undoTurn
-          @lastScore = (@currentPlayer.shots[@currentPlayer.shots.length-1] || 0)
+        if @hasCurrentPlayer()
 
-      undoLastTurn: ->
-        @currentPlayer.turn.pop()
-        if @currentPlayer.turn.length == 0
-          @currentPlayer.turn = @lastThreeShots()
+          if @currentPlayer.turn.length > 0
+            @currentPlayer.score += @currentPlayer.turn.pop()
+          else if undoTurn
+            @currentPlayer.turn = @currentPlayer.turns.pop()
 
-      lastThreeShots: ->
-        @currentPlayer.shots.slice(@currentPlayer.shots.length-3, @currentPlayer.shots.length)
+          @lastScore = _(@currentPlayer.turns.concat(@currentPlayer.turn)).chain().flatten().last().value() || 0
